@@ -3,12 +3,16 @@ package com.sublime.restaurants
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel(){
 
     private var restInterface: RestaurantAPIService
+    private lateinit var restaurantCall: Call<List<Restaurant>>
 
     companion object {
         const val FAVORITES = "favorites"
@@ -24,12 +28,33 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
 
 
         restInterface = retrofit.create(RestaurantAPIService::class.java)
+
+        getRestaurants()
     }
 
-    fun getRestaurants(){
-        restInterface.getRestaurants().execute().body()?.let { restaurants->
-            state.value = restaurants.restoreSelections()
-        }
+    private fun getRestaurants(){
+        restaurantCall = restInterface.getRestaurants()
+        restaurantCall.enqueue(object : Callback<List<Restaurant>> {
+            override fun onResponse(
+                call: Call<List<Restaurant>>,
+                response: Response<List<Restaurant>>
+            ){
+                response.body()?.let { restaurants ->
+                    state.value =
+                        restaurants.restoreSelections()
+                }
+            }
+            override fun onFailure(
+                call: Call<List<Restaurant>>, t: Throwable
+            ){
+                t.printStackTrace()
+            }
+        })
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        restaurantCall.cancel()
     }
 
     fun toggleFavorite(id: Int){

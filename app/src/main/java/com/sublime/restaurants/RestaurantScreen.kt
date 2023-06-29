@@ -24,7 +24,6 @@ import com.sublime.restaurants.ui.theme.RestaurantsTheme
 
 @Composable
 fun RestaurantScreen(){
-    //ViewModel Approach
     val restaurantViewModel: RestaurantViewModel = viewModel()
     LazyColumn() {
         items(restaurantViewModel.state.value){ restaurant->
