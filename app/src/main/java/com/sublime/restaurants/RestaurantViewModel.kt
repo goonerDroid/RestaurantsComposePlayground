@@ -3,15 +3,17 @@ package com.sublime.restaurants
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel(){
 
+    private val errorHandler = CoroutineExceptionHandler{_, exception->
+        exception.printStackTrace()
+    }
     private var restInterface: RestaurantAPIService
-    private val job = Job()
-    private val scope = CoroutineScope(job + Dispatchers.IO)
 
     companion object {
         const val FAVORITES = "favorites"
@@ -32,17 +34,16 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
     }
 
     private fun getRestaurants(){
-        scope.launch {
-            val restaurants = restInterface.getRestaurants()
-            withContext(Dispatchers.Main){
-                state.value = restaurants.restoreSelections()
-            }
+        viewModelScope.launch(errorHandler) {
+            val restaurants = getRemoteRestaurants()
+            state.value = restaurants.restoreSelections()
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        job.cancel()
+    private suspend fun getRemoteRestaurants(): List<Restaurant>{
+        return withContext(Dispatchers.IO){
+            restInterface.getRestaurants()
+        }
     }
 
     fun toggleFavorite(id: Int){
