@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.sublime.restaurants.ui.theme.RestaurantsTheme
 
 class MainActivity : ComponentActivity() {
@@ -33,9 +34,12 @@ class MainActivity : ComponentActivity() {
             } //Restaurant List Screen
 
             composable(route = "restaurants/{restaurant_id}",
-                        arguments = listOf(navArgument("restaurant_id"){
+                arguments = listOf(navArgument("restaurant_id"){
                             type = NavType.IntType
-                        })
+                }),
+                deepLinks = listOf(navDeepLink {
+                    uriPattern = "www.restaurantsapp.details.com/{restaurant_id}"
+                })
             ){
                 RestaurantDetailScreen()
             } // Restaurant Detail Screen
