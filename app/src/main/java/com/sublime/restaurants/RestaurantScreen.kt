@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -23,13 +22,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sublime.restaurants.ui.theme.RestaurantsTheme
 
 @Composable
-fun RestaurantScreen(){
+fun RestaurantScreen(onItemClick: (id: Int) -> Unit = { }){
     val restaurantViewModel: RestaurantViewModel = viewModel()
     LazyColumn() {
         items(restaurantViewModel.state.value){ restaurant->
-            RestaurantItem(restaurant){ id ->
-                restaurantViewModel.toggleFavorite(id)
-            }
+            RestaurantItem(
+                restaurant,
+                onFavoriteClick =
+                { id -> restaurantViewModel.toggleFavorite(id) },
+                onItemClick = { id -> onItemClick(id) })
         }
     }
 }
@@ -43,7 +44,7 @@ fun DefaultPreview(){
 }
 
 @Composable
-fun RestaurantItem(item: Restaurant, onClick: (id:Int) -> Unit) {
+fun RestaurantItem(item: Restaurant, onFavoriteClick: (id:Int) -> Unit, onItemClick: (id: Int) -> Unit) {
 
     val icon = if (item.isFavorite)
         Icons.Filled.Favorite
@@ -51,14 +52,14 @@ fun RestaurantItem(item: Restaurant, onClick: (id:Int) -> Unit) {
         Icons.Filled.FavoriteBorder
 
     Card(elevation = 4.dp,
-        modifier = Modifier.padding(8.dp)) {
+        modifier = Modifier.padding(8.dp).clickable { onItemClick(item.id) }) {
         Row(verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)) {
 
             RestaurantIcon(Icons.Filled.Place,Modifier.weight(0.15f))
             RestaurantDetails(item.title,item.description,Modifier.weight(0.70f))
             RestaurantIcon(icon,Modifier.weight(0.15f)){
-                onClick(item.id)
+                onFavoriteClick(item.id)
             }
         }
     }
@@ -78,8 +79,10 @@ fun FavoriteIcon(icon: ImageVector,modifier: Modifier,onClick: ()-> Unit) {
 }
 
 @Composable
-fun RestaurantDetails(title: String, description: String, modifier: Modifier) {
-    Column(modifier = modifier) {
+fun RestaurantDetails(title: String, description: String, modifier: Modifier,
+                      horizontalAlignment: Alignment.Horizontal = Alignment.Start) {
+    Column(modifier = modifier,
+            horizontalAlignment = horizontalAlignment) {
         Text(text = title,
             style = MaterialTheme.typography.h6)
 
